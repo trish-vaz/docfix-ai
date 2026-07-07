@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Uploaded documents
+backend/uploads/
+backend/outputs/
+
+# Environment variables
+.env
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Build folders
+dist/
+build/
