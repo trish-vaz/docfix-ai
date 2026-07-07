@@ -24,7 +24,14 @@ app.post("/upload", upload.single("document"), async (req, res) => {
     try {
         const documentInfo = await readDocument(req.file.path, req.file.originalname);
 
-        console.log("Document Info:", JSON.stringify(documentInfo, null, 2));
+        console.log("Analysis:", JSON.stringify(documentInfo.analysis, null, 2));
+
+        console.log("Summary:", {
+            paragraphCount: documentInfo.paragraphCount,
+            imageCount: documentInfo.imageCount,
+            tableCount: documentInfo.tableCount,
+            styleDefinitions: documentInfo.styleDefinitions,
+        });
 
         res.json({
             message: "Document opened successfully",

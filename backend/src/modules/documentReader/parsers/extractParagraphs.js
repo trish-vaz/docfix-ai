@@ -1,4 +1,5 @@
 const { XMLParser } = require("fast-xml-parser");
+const { extractListInfoFromParagraph } = require("./extractLists");
 
 function extractParagraphs(documentXml) {
     const parser = new XMLParser({
@@ -36,6 +37,8 @@ function extractParagraphs(documentXml) {
                 content: {
                     text,
                 },
+
+                list: extractListInfoFromParagraph(paragraph),
 
                 style: extractStyleFromParagraph(paragraph),
 
@@ -75,6 +78,9 @@ function extractTextFromParagraph(paragraph) {
 }
 
 function detectParagraphType(paragraph) {
+    const listInfo = extractListInfoFromParagraph(paragraph);
+
+    if (listInfo) return "listItem";
     const styleId = paragraph?.["w:pPr"]?.["w:pStyle"]?.["w:val"];
 
     if (!styleId) return "paragraph";
