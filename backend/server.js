@@ -28,6 +28,8 @@ app.post("/upload", upload.single("document"), async (req, res) => {
 
         console.log("Health Report:", JSON.stringify(documentInfo.healthReport, null, 2));
 
+        console.log("Layout Plan:", JSON.stringify(documentInfo.layoutPlan, null, 2));
+
         console.log("Summary:", {
             paragraphCount: documentInfo.paragraphCount,
             imageCount: documentInfo.imageCount,

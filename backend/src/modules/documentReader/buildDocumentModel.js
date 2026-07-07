@@ -1,6 +1,7 @@
 const { openDocx } = require("./reader/openDocx");
 const { loadXml } = require("./reader/loadXml");
 const { analyzeDocumentHealth } = require("../documentHealth");
+const { createPlanFromHealth } = require("../layoutEngine");
 
 const { extractParagraphs } = require("./parsers/extractParagraphs");
 const { extractImages } = require("./parsers/extractImages");
@@ -53,6 +54,8 @@ async function buildDocumentModel(filePath, originalFileName = "unknown.docx") {
 
     const healthReport = analyzeDocumentHealth(documentModel);
 
+    const layoutPlan = createPlanFromHealth(healthReport, "college_assignment");
+
     return {
         isValidDocx: true,
         fileCount: result.files.length,
@@ -78,6 +81,7 @@ async function buildDocumentModel(filePath, originalFileName = "unknown.docx") {
         tableCount: tableBlocks.length,
         styleDefinitions: styles.length,
         healthReport,
+        layoutPlan,
     };
 }
 
