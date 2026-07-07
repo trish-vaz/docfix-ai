@@ -1,5 +1,6 @@
 const { openDocx } = require("./reader/openDocx");
 const { loadXml } = require("./reader/loadXml");
+const { analyzeDocumentHealth } = require("../documentHealth");
 
 const { extractParagraphs } = require("./parsers/extractParagraphs");
 const { extractImages } = require("./parsers/extractImages");
@@ -50,6 +51,8 @@ async function buildDocumentModel(filePath, originalFileName = "unknown.docx") {
 
     const analysis = analyzeDocument(documentModel);
 
+    const healthReport = analyzeDocumentHealth(documentModel);
+
     return {
         isValidDocx: true,
         fileCount: result.files.length,
@@ -74,6 +77,7 @@ async function buildDocumentModel(filePath, originalFileName = "unknown.docx") {
         imageCount: imageBlocks.length,
         tableCount: tableBlocks.length,
         styleDefinitions: styles.length,
+        healthReport,
     };
 }
 
