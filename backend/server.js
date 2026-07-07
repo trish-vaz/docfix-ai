@@ -30,6 +30,11 @@ app.post("/upload", upload.single("document"), async (req, res) => {
 
         console.log("Layout Plan:", JSON.stringify(documentInfo.layoutPlan, null, 2));
 
+        console.log(
+            "Editing Instructions:",
+            JSON.stringify(documentInfo.editingInstructions, null, 2)
+        );
+
         console.log("Summary:", {
             paragraphCount: documentInfo.paragraphCount,
             imageCount: documentInfo.imageCount,
