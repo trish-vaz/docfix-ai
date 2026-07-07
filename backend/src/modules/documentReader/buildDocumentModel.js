@@ -2,7 +2,15 @@ const { openDocx } = require("./reader/openDocx");
 const { loadXml } = require("./reader/loadXml");
 const { analyzeDocumentHealth } = require("../documentHealth");
 const { createPlanFromHealth } = require("../layoutEngine");
-const { createEditingInstructions } = require("../documentEditor");
+const {
+    createEditingInstructions,
+    applyEditingInstructions,
+} = require("../documentEditor");
+//const { extractBlocks } = require("./parsers/extractBlocks");
+
+const { extractBlockOrder } = require("./parsers/extractBlockOrder");
+
+const { mergeBlocks } = require("./mergeBlocks");
 
 const { extractParagraphs } = require("./parsers/extractParagraphs");
 const { extractImages } = require("./parsers/extractImages");
@@ -27,9 +35,11 @@ async function buildDocumentModel(filePath, originalFileName = "unknown.docx") {
     const documentModel = createEmptyDocumentModel(originalFileName);
 
     const paragraphBlocks = extractParagraphs(documentXml);
-    const imageBlocks = extractImages(result.files);
+    const imageBlocks = await extractImages(result.files, result.zip);
     const tableBlocks = extractTables(documentXml);
     const styles = extractStyles(stylesXml);
+
+    const blockOrder = extractBlockOrder(documentXml);
 
     const resolvedBlocks = resolveStyles(paragraphBlocks, styles);
 
@@ -43,10 +53,16 @@ async function buildDocumentModel(filePath, originalFileName = "unknown.docx") {
         paragraphStyles: styles.filter((style) => style.type === "paragraph"),
     };
 
-    documentModel.blocks.push(...resolvedBlocks);
-    documentModel.blocks.push(...imageBlocks);
-    documentModel.blocks.push(...tableBlocks);
+    const resolvedParagraphBlocks = resolveStyles(paragraphBlocks, styles);
 
+    const mergedBlocks = mergeBlocks({
+        blockOrder,
+        paragraphBlocks: resolvedParagraphBlocks,
+        tableBlocks,
+        imageBlocks,
+    });
+
+    documentModel.blocks.push(...mergedBlocks);
     documentModel.metadata.wordCount = paragraphBlocks.reduce((count, block) => {
         return count + block.content.text.split(/\s+/).filter(Boolean).length;
     }, 0);
@@ -58,6 +74,11 @@ async function buildDocumentModel(filePath, originalFileName = "unknown.docx") {
     const layoutPlan = createPlanFromHealth(healthReport, "college_assignment");
 
     const editingInstructions = createEditingInstructions(documentModel, layoutPlan);
+
+    const updatedDocumentModel = applyEditingInstructions(
+        documentModel,
+        editingInstructions
+    );
 
     return {
         isValidDocx: true,
@@ -86,6 +107,7 @@ async function buildDocumentModel(filePath, originalFileName = "unknown.docx") {
         healthReport,
         layoutPlan,
         editingInstructions,
+        updatedDocumentModel,
     };
 }
 

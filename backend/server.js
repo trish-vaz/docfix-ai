@@ -2,6 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const cors = require("cors");
 const fs = require("fs");
+const { generateFixedDocxFromModel } = require("./src/modules/documentGenerator");
 
 const { readDocument } = require("./src/modules/documentReader");
 
@@ -24,6 +25,10 @@ app.post("/upload", upload.single("document"), async (req, res) => {
     try {
         const documentInfo = await readDocument(req.file.path, req.file.originalname);
 
+        const outputPath = await generateFixedDocxFromModel(
+            documentInfo.updatedDocumentModel,
+            `fixed-${req.file.originalname}`
+        );
         console.log("Analysis:", JSON.stringify(documentInfo.analysis, null, 2));
 
         console.log("Health Report:", JSON.stringify(documentInfo.healthReport, null, 2));
@@ -35,6 +40,21 @@ app.post("/upload", upload.single("document"), async (req, res) => {
             JSON.stringify(documentInfo.editingInstructions, null, 2)
         );
 
+        console.log(
+            "Updated Model Preview:",
+            JSON.stringify(
+                documentInfo.updatedDocumentModel.blocks.slice(0, 5).map((block) => ({
+                    id: block.id,
+                    type: block.type,
+                    text: block.content?.text?.substring(0, 80),
+                    finalStyle: block.finalStyle || null,
+                    finalLayout: block.finalLayout || null,
+                })),
+                null,
+                2
+            )
+        );
+
         console.log("Summary:", {
             paragraphCount: documentInfo.paragraphCount,
             imageCount: documentInfo.imageCount,
@@ -42,10 +62,7 @@ app.post("/upload", upload.single("document"), async (req, res) => {
             styleDefinitions: documentInfo.styleDefinitions,
         });
 
-        res.json({
-            message: "Document opened successfully",
-            documentInfo,
-        });
+        res.download(outputPath);
     } catch (error) {
         console.error(error);
 

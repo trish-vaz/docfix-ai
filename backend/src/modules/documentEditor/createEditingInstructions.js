@@ -26,7 +26,7 @@ function createEditingInstructions(documentModel, layoutPlan) {
                     value: {
                         lineSpacing: spacing.lineSpacing || 1.5,
                         paragraphSpacingBefore: spacing.paragraphSpacingBefore ?? 0,
-                        paragraphSpacingAfter: spacing.paragraphSpacingAfter ?? 6,
+                        paragraphSpacingAfter: spacing.paragraphSpacingAfter ?? 8,
                     },
                     reason: operation.reason,
                 };

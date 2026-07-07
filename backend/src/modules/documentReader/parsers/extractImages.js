@@ -1,10 +1,17 @@
-function extractImages(files) {
-    const imageFiles = files.filter((file) =>
-        file.startsWith("word/media/")
-    );
+async function extractImages(files, zip) {
+    const imageFiles = files.filter((file) => file.startsWith("word/media/"));
 
-    return imageFiles.map((file, index) => {
-        return {
+    const imageBlocks = [];
+
+    for (let index = 0; index < imageFiles.length; index++) {
+        const file = imageFiles[index];
+        const imageFile = zip.file(file);
+
+        if (!imageFile) continue;
+
+        const buffer = await imageFile.async("nodebuffer");
+
+        imageBlocks.push({
             id: `image_${index + 1}`,
             type: "image",
             order: null,
@@ -19,15 +26,16 @@ function extractImages(files) {
             content: {
                 filePath: file,
                 fileName: file.split("/").pop(),
+                buffer,
             },
 
             style: {},
 
             layout: {
-                width: null,
-                height: null,
-                position: "unknown",
-                alignment: null,
+                width: 400,
+                height: 250,
+                position: "inline",
+                alignment: "center",
             },
 
             relationships: {
@@ -37,8 +45,10 @@ function extractImages(files) {
                 childrenIds: [],
                 captionId: null,
             },
-        };
-    });
+        });
+    }
+
+    return imageBlocks;
 }
 
 module.exports = { extractImages };

@@ -21,7 +21,7 @@ function extractTables(documentXml) {
         return {
             id: `table_${index + 1}`,
             type: "table",
-            order: null,
+            order: 1000 + index,
             sectionId: "section_1",
 
             pageEstimate: {
@@ -95,4 +95,46 @@ function extractParagraphText(paragraph) {
         .join("");
 }
 
-module.exports = { extractTables };
+function extractTableBlockFromNode(table, order) {
+    const rows = extractRows(table);
+
+    return {
+        id: `table_${order}`,
+        type: "table",
+        order,
+        sectionId: "section_1",
+
+        pageEstimate: {
+            startPage: null,
+            endPage: null,
+            confidence: "low",
+        },
+
+        content: {
+            rowCount: rows.length,
+            columnCount: rows[0]?.length || 0,
+            rows,
+        },
+
+        style: {},
+
+        layout: {
+            alignment: null,
+            width: null,
+            fitToPage: null,
+        },
+
+        relationships: {
+            previousBlockId: order === 1 ? null : `block_${order - 1}`,
+            nextBlockId: `block_${order + 1}`,
+            parentId: null,
+            childrenIds: [],
+            captionId: null,
+        },
+    };
+}
+
+module.exports = {
+    extractTables,
+    extractTableBlockFromNode,
+};

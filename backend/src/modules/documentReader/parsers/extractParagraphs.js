@@ -81,6 +81,7 @@ function detectParagraphType(paragraph) {
     const listInfo = extractListInfoFromParagraph(paragraph);
 
     if (listInfo) return "listItem";
+
     const styleId = paragraph?.["w:pPr"]?.["w:pStyle"]?.["w:val"];
 
     if (!styleId) return "paragraph";
@@ -141,4 +142,43 @@ function getFirstRun(paragraph) {
     return Array.isArray(runs) ? runs[0] : runs;
 }
 
-module.exports = { extractParagraphs };
+function extractParagraphBlockFromNode(paragraph, order) {
+    const text = extractTextFromParagraph(paragraph);
+
+    if (!text.trim()) return null;
+
+    return {
+        id: `block_${order}`,
+        type: detectParagraphType(paragraph),
+        order,
+        sectionId: "section_1",
+
+        pageEstimate: {
+            startPage: null,
+            endPage: null,
+            confidence: "low",
+        },
+
+        content: {
+            text,
+        },
+
+        list: extractListInfoFromParagraph(paragraph),
+
+        style: extractStyleFromParagraph(paragraph),
+
+        layout: extractLayoutFromParagraph(paragraph),
+
+        relationships: {
+            previousBlockId: order === 1 ? null : `block_${order - 1}`,
+            nextBlockId: `block_${order + 1}`,
+            parentId: null,
+            childrenIds: [],
+        },
+    };
+}
+
+module.exports = {
+    extractParagraphs,
+    extractParagraphBlockFromNode,
+};
