@@ -1,6 +1,6 @@
 const { XMLParser } = require("fast-xml-parser");
 
-function extractBlockOrder(documentXml) {
+function extractBlockOrder(documentXml, relationships = {}) {
     const parser = new XMLParser({
         ignoreAttributes: false,
         attributeNamePrefix: "",
@@ -17,6 +17,7 @@ function extractBlockOrder(documentXml) {
 
     bodyChildren.forEach((node) => {
         if (node["w:p"]) {
+            const imageTargets = extractImageTargetsFromParagraph(node["w:p"], relationships);
             const text = extractTextFromPreservedParagraph(node["w:p"]);
 
             if (text.trim()) {
@@ -25,6 +26,13 @@ function extractBlockOrder(documentXml) {
                     text: normalizeText(text),
                 });
             }
+
+            imageTargets.forEach((target) => {
+                order.push({
+                    type: "image",
+                    filePath: target,
+                });
+            });
         }
 
         if (node["w:tbl"]) {
@@ -35,6 +43,36 @@ function extractBlockOrder(documentXml) {
     });
 
     return order;
+}
+
+function extractImageTargetsFromParagraph(paragraphNodes, relationships) {
+    const targets = [];
+
+    function walk(value) {
+        if (Array.isArray(value)) {
+            value.forEach(walk);
+            return;
+        }
+
+        if (!value || typeof value !== "object") return;
+
+        const attrs = value[":@"];
+
+        if (attrs && (attrs["r:embed"] || attrs["r:link"])) {
+            const relationshipId = attrs["r:embed"] || attrs["r:link"];
+            const rel = relationships[relationshipId];
+
+            if (rel?.target) {
+                targets.push(rel.target);
+            }
+        }
+
+        Object.values(value).forEach(walk);
+    }
+
+    walk(paragraphNodes);
+
+    return targets;
 }
 
 function extractTextFromPreservedParagraph(paragraphNodes) {

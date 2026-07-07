@@ -1,6 +1,7 @@
 function mergeBlocks({ blockOrder, paragraphBlocks, tableBlocks, imageBlocks }) {
     const paragraphsQueue = [...paragraphBlocks];
     const tablesQueue = [...tableBlocks];
+    const imagesQueue = [...imageBlocks];
 
     const merged = [];
 
@@ -20,12 +21,21 @@ function mergeBlocks({ blockOrder, paragraphBlocks, tableBlocks, imageBlocks }) 
                 merged.push(tablesQueue.shift());
             }
         }
+
+        if (entry.type === "image") {
+            const matchIndex = imagesQueue.findIndex(
+                (block) => block.content.filePath === entry.filePath
+            );
+
+            if (matchIndex !== -1) {
+                merged.push(imagesQueue.splice(matchIndex, 1)[0]);
+            }
+        }
     });
 
-    // Add anything not matched
     merged.push(...paragraphsQueue);
     merged.push(...tablesQueue);
-    merged.push(...imageBlocks);
+    merged.push(...imagesQueue);
 
     return merged.map((block, index) => ({
         ...block,

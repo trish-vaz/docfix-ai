@@ -8,6 +8,7 @@ const {
 } = require("../documentEditor");
 //const { extractBlocks } = require("./parsers/extractBlocks");
 
+const { extractRelationships } = require("./parsers/extractRelationships");
 const { extractBlockOrder } = require("./parsers/extractBlockOrder");
 
 const { mergeBlocks } = require("./mergeBlocks");
@@ -31,6 +32,7 @@ async function buildDocumentModel(filePath, originalFileName = "unknown.docx") {
 
     const documentXml = await loadXml(result.zip, "word/document.xml");
     const stylesXml = await loadXml(result.zip, "word/styles.xml");
+    const relsXml = await loadXml(result.zip, "word/_rels/document.xml.rels");
 
     const documentModel = createEmptyDocumentModel(originalFileName);
 
@@ -38,9 +40,18 @@ async function buildDocumentModel(filePath, originalFileName = "unknown.docx") {
     const imageBlocks = await extractImages(result.files, result.zip);
     const tableBlocks = extractTables(documentXml);
     const styles = extractStyles(stylesXml);
+    const relationships = extractRelationships(relsXml);
 
-    const blockOrder = extractBlockOrder(documentXml);
+    const blockOrder = extractBlockOrder(documentXml, relationships);
+    console.log(
+        "Image entries in blockOrder:",
+        blockOrder.filter((entry) => entry.type === "image")
+    );
 
+    console.log(
+        "Image blocks:",
+        imageBlocks.map((img) => img.content.filePath)
+    );
     const resolvedBlocks = resolveStyles(paragraphBlocks, styles);
 
     documentModel.styles = {
